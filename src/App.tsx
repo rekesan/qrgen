@@ -100,9 +100,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* --- Header --- */}
-        <div className="col-span-1 lg:col-span-12 mb-4">
+        <div className="col-span-1 md:col-span-12 mb-4">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
             QRCode Generator
           </h1>
@@ -113,7 +113,7 @@ export default function App() {
         </div>
 
         {/* --- Left Column: Controls --- */}
-        <div className="col-span-1 lg:col-span-4 space-y-6">
+        <div className="col-span-1 md:col-span-4 space-y-6">
           {/* Content Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <div className="flex items-center gap-2 mb-4 text-indigo-600">
@@ -327,7 +327,7 @@ export default function App() {
         </div>
 
         {/* --- Right Column: Preview --- */}
-        <div className="col-span-1 lg:col-span-8 flex flex-col">
+        <div className="col-span-1 md:col-span-8 flex flex-col">
           <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-8 flex flex-col items-center justify-center relative overflow-hidden">
             {/* Background Pattern */}
             <div
