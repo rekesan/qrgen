@@ -106,7 +106,7 @@ export default function App() {
         {/* --- Header --- */}
         <div className="col-span-1 lg:col-span-12 mb-4">
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-            QR Code Generator
+            QRCode Generator
           </h1>
           <p className="text-slate-500">
             Create customized QR codes with logos, colors, and high-quality
