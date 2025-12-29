@@ -17,7 +17,7 @@ export default function App() {
   // --- State Management ---
   const [value, setValue] = useState("https://example.com");
   const [size, setSize] = useState(256);
-  const [fgColor, setFgColor] = useState("#000000");
+  const [fgColor, setFgColor] = useState("#1077D6");
   const [bgColor, setBgColor] = useState("#ffffff");
   const [level, setLevel] = useState<TQRCode["level"]>("H");
   const [marginSize, setMarginSize] = useState(0);
