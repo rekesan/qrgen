@@ -95,9 +95,7 @@ export default function App() {
     };
 
     // Load the SVG data into the image
-    img.src =
-      "data:image/svg+xml;base64," +
-      btoa((svgData));
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
   return (
@@ -264,17 +262,34 @@ export default function App() {
 
                   <div className="flex items-center gap-2">
                     <input
+                      id="excavate"
                       type="checkbox"
                       checked={logoExcavate}
                       onChange={(e) => setLogoExcavate(e.target.checked)}
                       className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-600">
-                      Remove background behind logo
-                    </span>
+                    <label
+                      htmlFor="excavate"
+                      className="text-sm text-slate-600 select-none"
+                    >
+                      Remove blocks around the logo
+                    </label>
                   </div>
                 </div>
               )}
+
+              <div className="flex flex-row flex-wrap space-x-4">
+                <img
+                  src="sparrk.png"
+                  width={40}
+                  height={40}
+                  alt="Sparrk logo"
+                  className="shadow-sm cursor-pointer hover:opacity-90"
+                  onClick={(e) => {
+                    setLogoSrc(e.currentTarget.src);
+                  }}
+                />
+              </div>
             </div>
           </div>
 
