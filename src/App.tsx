@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import {
   Download,
   Settings,
@@ -28,6 +28,7 @@ export default function App() {
   const [logoExcavate, setLogoExcavate] = useState(true);
 
   const qrRef = useRef(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // --- Handlers ---
 
@@ -59,43 +60,32 @@ export default function App() {
   };
 
   const downloadImage = (format: string) => {
-    if (!qrRef.current) return;
+    if (!qrCanvasRef.current) return;
 
-    const svgData = new XMLSerializer().serializeToString(qrRef.current);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
+    let canvas = qrCanvasRef.current;
+    if (format === "jpeg") {
+      const newCanvas = document.createElement("canvas");
+      const ctx = newCanvas.getContext("2d");
+      newCanvas.width = size;
+      newCanvas.height = size;
 
-    // Add a small delay/buffer for image loading
-    img.onload = () => {
-      canvas.width = size;
-      canvas.height = size;
-
-      if (!ctx) {
-        return;
-      }
-
-      // If JPEG, fill background white first (transparent becomes black in JPEG)
-      if (format === "jpeg") {
+      if (ctx) {
         ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, size, size);
+        ctx.drawImage(canvas, 0, 0);
+        canvas = newCanvas;
       }
+    }
 
-      ctx.drawImage(img, 0, 0);
+    const mimeType = `image/${format}`;
+    const dataUrl = canvas.toDataURL(mimeType);
 
-      const mimeType = format === "png" ? "image/png" : "image/jpeg";
-      const dataUrl = canvas.toDataURL(mimeType);
-
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `qrcode.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    };
-
-    // Load the SVG data into the image
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `qrcode.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -359,6 +349,34 @@ export default function App() {
                     : undefined
                 }
               />
+              {/* Hidden QRCodeCanvas for download functionality */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  top: "-9999px",
+                }}
+              >
+                <QRCodeCanvas
+                  ref={qrCanvasRef}
+                  value={value}
+                  size={size}
+                  fgColor={fgColor}
+                  bgColor={bgColor}
+                  level={level}
+                  marginSize={marginSize}
+                  imageSettings={
+                    logoSrc && typeof logoSrc === "string"
+                      ? {
+                          src: logoSrc,
+                          height: logoSize,
+                          width: logoSize,
+                          excavate: logoExcavate,
+                        }
+                      : undefined
+                  }
+                />
+              </div>
             </div>
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg z-10">
