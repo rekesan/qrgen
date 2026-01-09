@@ -93,13 +93,25 @@ export default function App() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
         {/* --- Header --- */}
         <div className="col-span-1 md:col-span-12 mb-4">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-            QRCode Generator
-          </h1>
-          <p className="text-slate-500">
-            Create customized QR codes with logos, colors, and high-quality
-            export options.
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                QRCode Generator
+              </h1>
+              <p className="text-slate-500">
+                Create customized QR codes with logos, colors, and high-quality
+                export options.
+              </p>
+            </div>
+            <div className="ml-4">
+              <a href="https://www.buymeacoffee.com/redkean">
+                <img
+                  src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=redkean&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00"
+                  alt="Buy me a coffee"
+                />
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* --- Left Column: Controls --- */}
