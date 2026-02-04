@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import {
   Download,
@@ -7,11 +7,46 @@ import {
   Type,
   Palette,
   Trash2,
-  Maximize,
   AlertCircle,
+  ChevronDown,
 } from "lucide-react";
 
 type TQRCode = React.ComponentProps<typeof QRCodeSVG>;
+
+// Custom Select Component
+interface SelectItemProps {
+  value: string;
+  children: React.ReactNode;
+}
+
+function SelectItem({ value, children }: SelectItemProps) {
+  return <option value={value}>{children}</option>;
+}
+
+interface SelectProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+  placeholder?: string;
+}
+
+function Select({ value, onValueChange, children, disabled = false, placeholder }: SelectProps) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
+        disabled={disabled}
+        className={`flex appearance-none h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${disabled ? 'bg-slate-50' : ''}`}
+      >
+        {placeholder && <option value="" disabled>{placeholder}</option>}
+        {children}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50 pointer-events-none" />
+    </div>
+  );
+}
 
 export default function App() {
   // --- State Management ---
@@ -21,6 +56,8 @@ export default function App() {
   const [bgColor, setBgColor] = useState("#ffffff");
   const [level, setLevel] = useState<TQRCode["level"]>("H");
   const [marginSize, setMarginSize] = useState(0);
+  const [exportScale, setExportScale] = useState(1);
+  const [exportFormat, setExportFormat] = useState("png");
 
   // Logo State
   const [logoSrc, setLogoSrc] = useState<string | ArrayBuffer | null>("");
@@ -60,32 +97,76 @@ export default function App() {
   };
 
   const downloadImage = (format: string) => {
-    if (!qrCanvasRef.current) return;
+    const scaledSize = size * exportScale;
 
-    let canvas = qrCanvasRef.current;
-    if (format === "jpeg") {
-      const newCanvas = document.createElement("canvas");
-      const ctx = newCanvas.getContext("2d");
-      newCanvas.width = size;
-      newCanvas.height = size;
+    // Create a temporary canvas element with scaled size
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.left = "-9999px";
+    tempDiv.style.top = "-9999px";
+    document.body.appendChild(tempDiv);
 
-      if (ctx) {
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, size, size);
-        ctx.drawImage(canvas, 0, 0);
-        canvas = newCanvas;
-      }
-    }
+    const tempCanvas = (
+      <QRCodeCanvas
+        value={value}
+        size={scaledSize}
+        fgColor={fgColor}
+        bgColor={bgColor}
+        level={level}
+        marginSize={marginSize}
+        imageSettings={
+          logoSrc && typeof logoSrc === "string"
+            ? {
+                src: logoSrc,
+                height: logoSize * exportScale,
+                width: logoSize * exportScale,
+                excavate: logoExcavate,
+              }
+            : undefined
+        }
+      />
+    );
 
-    const mimeType = `image/${format}`;
-    const dataUrl = canvas.toDataURL(mimeType);
+    // Render the temporary QR code
+    import("react-dom/client").then(({ createRoot }) => {
+      const root = createRoot(tempDiv);
+      root.render(tempCanvas);
 
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = `qrcode.${format}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Wait for render and then download
+      setTimeout(() => {
+        const canvasElement = tempDiv.querySelector("canvas") as HTMLCanvasElement;
+        if (canvasElement) {
+          let canvas = canvasElement;
+          if (format === "jpeg") {
+            const newCanvas = document.createElement("canvas");
+            const ctx = newCanvas.getContext("2d");
+            newCanvas.width = scaledSize;
+            newCanvas.height = scaledSize;
+
+            if (ctx) {
+              ctx.fillStyle = bgColor;
+              ctx.fillRect(0, 0, scaledSize, scaledSize);
+              ctx.drawImage(canvas, 0, 0);
+              canvas = newCanvas;
+            }
+          }
+
+          const mimeType = `image/${format}`;
+          const dataUrl = canvas.toDataURL(mimeType);
+
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = `qrcode@${exportScale}x.${format}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+
+        // Clean up
+        root.unmount();
+        document.body.removeChild(tempDiv);
+      }, 100);
+    });
   };
 
   return (
@@ -391,24 +472,49 @@ export default function App() {
               </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg z-10">
+            {/* Export Options */}
+            <div className="mt-8 z-10 w-full max-w-md">
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Format
+                  </label>
+                  <Select value={exportFormat} onValueChange={setExportFormat}>
+                    <SelectItem value="png">PNG</SelectItem>
+                    <SelectItem value="jpeg">JPEG</SelectItem>
+                    <SelectItem value="svg">SVG</SelectItem>
+                  </Select>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Scale
+                  </label>
+                  <Select
+                    value={exportScale.toString()}
+                    onValueChange={(value) => setExportScale(Number(value))}
+                    disabled={exportFormat === "svg"}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((scale) => (
+                      <SelectItem key={scale} value={scale.toString()}>
+                        {scale}x
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
               <button
-                onClick={() => downloadImage("png")}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 font-medium"
+                onClick={() => {
+                  if (exportFormat === "svg") {
+                    downloadSVG();
+                  } else {
+                    downloadImage(exportFormat);
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 font-medium"
               >
-                <Download size={18} /> PNG
-              </button>
-              <button
-                onClick={() => downloadImage("jpeg")}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-medium shadow-sm"
-              >
-                <Download size={18} /> JPEG
-              </button>
-              <button
-                onClick={downloadSVG}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-medium shadow-sm"
-              >
-                <Maximize size={18} /> SVG
+                <Download size={18} /> Download {exportFormat.toUpperCase()} {exportFormat !== "svg" ? `(${exportScale}x)` : ""}
               </button>
             </div>
 
